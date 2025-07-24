@@ -1,0 +1,72 @@
+{
+  "name": "issue-flow",
+  "displayName": "IssueFlow",
+  "description": "Transform TODO comments into GitHub/GitLab issues",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "issueflow.openTodoManager",
+        "title": "Open TODO Manager",
+        "category": "IssueFlow"
+      },
+      {
+        "command": "issueflow.reconfigureGitLab",
+        "title": "Reconfigure GitLab Settings",
+        "category": "IssueFlow"
+      }
+    ],
+    "configuration": {
+      "title": "IssueFlow",
+      "properties": {
+        "issueflow.githubToken": {
+          "type": "string",
+          "description": "GitHub Personal Access Token",
+          "scope": "application"
+        },
+        "issueflow.gitlabToken": {
+          "type": "string",
+          "description": "GitLab Personal Access Token",
+          "scope": "application"
+        },
+        "issueflow.gitlabUrl": {
+          "type": "string",
+          "default": "https://gitlab.com",
+          "description": "GitLab instance URL",
+          "scope": "application"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./tsconfig.extension.json",
+    "watch": "tsc -watch -p ./tsconfig.extension.json",
+    "build:webview": "vue-tsc -b && vite build",
+    "dev:webview": "vite"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.11",
+    "node-fetch": "^3.3.2",
+    "tailwindcss": "^4.1.11",
+    "vue": "^3.5.17",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.13",
+    "@types/vscode": "^1.102.0",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "@vue/tsconfig": "^0.7.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4",
+    "vue-tsc": "^2.2.12"
+  }
+}
