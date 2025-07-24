@@ -4,7 +4,7 @@
   "description": "Transform TODO comments into GitHub/GitLab issues",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.102.0"
   },
   "categories": [
     "Other"
@@ -51,7 +51,11 @@
     "compile": "tsc -p ./tsconfig.extension.json",
     "watch": "tsc -watch -p ./tsconfig.extension.json",
     "build:webview": "vue-tsc -b && vite build",
-    "dev:webview": "vite"
+    "dev:webview": "vite",
+    "build:all": "npm run compile && npm run build:webview",
+    "vsce:package": "vsce package",
+    "vsce:publish": "vsce publish",
+    "publish:all": "npm run build:all && npm run vsce:package && npm run vsce:publish"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
@@ -68,5 +72,20 @@
     "typescript": "~5.8.3",
     "vite": "^7.0.4",
     "vue-tsc": "^2.2.12"
-  }
+  },
+  "publisher": "IssueFlowVSE",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/diego81b/IssueFlow.git"
+  },
+  "author": {
+    "name": "Diego Baldeschi",
+    "email": "baldeschidiego@gmail.com",
+    "url": "https://github.com/diego81b"
+  },
+  "bugs": {
+    "url": "https://github.com/diego81b/IssueFlow/issues"
+  },
+  "homepage": "https://github.com/diego81b/IssueFlow#readme"
 }

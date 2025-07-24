@@ -1,0 +1,10 @@
+.vscode/
+.git/
+src/
+test/
+node_modules/
+**/*.map
+**/*.ts
+**/*.vue
+public/
+dist/

@@ -106,14 +106,14 @@ class TodoWebviewProvider {
     _getHtmlForWebview(webview) {
         const isDev = process.env.VSCODE_DEBUG_MODE === 'true' || process.env.NODE_ENV === 'development';
         if (isDev) {
-            // Live reload: carica da Vite
+            // Live reload: carica da Vite, senza CSP per evitare errori CORS/HMR
             return `
         <!DOCTYPE html>
         <html lang="en">
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>IssueFlow (Dev)</title>
+          <!-- CSP rimossa in dev -->
         </head>
         <body>
           <div id="app"></div>
