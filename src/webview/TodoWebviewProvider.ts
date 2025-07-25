@@ -187,6 +187,10 @@ export class TodoWebviewProvider implements vscode.WebviewViewProvider {
         this._todoManager.deselectAllTodos();
         break;
 
+      case 'updateTodoDescription':
+        this._todoManager.updateTodoDescription(message.todoId, message.description);
+        break;
+
       case 'githubLogin':
         console.log('GitHub login attempt...');
         try {
@@ -292,13 +296,18 @@ export class TodoWebviewProvider implements vscode.WebviewViewProvider {
       for (const todo of todos) {
         console.log('Creating issue for todo:', todo);
         
+        // Use only the first line content in the title
         const title = `TODO: ${todo.content || `Linea ${todo.line}`}`;
         
-        // Create a more detailed body with the description
-        let body = `TODO trovato in ${todo.file} alla linea ${todo.line}:\n\n\`\`\`\n${todo.fullLine}\n\`\`\`\n\n`;
+        // Create a detailed body starting with file location
+        let body = `**File:** ${todo.file} (linea ${todo.line})\n\n`;
         
+        // Add the code context
+        body += `**Codice:**\n\`\`\`\n${todo.fullLine}\n\`\`\`\n\n`;
+        
+        // Add the full description if it's different from content
         if (todo.description && todo.description !== todo.content) {
-          body += `**Descrizione dettagliata:**\n${todo.description}\n\n`;
+          body += `**Descrizione completa:**\n${todo.description}\n\n`;
         }
         
         body += `**Contenuto TODO:** ${todo.content}`;

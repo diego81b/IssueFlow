@@ -88,9 +88,13 @@
               </p>
               <div v-if="todo.selected || todo.description" class="mb-2">
                 <label class="block text-xs font-medium text-gray-700 mb-1">Descrizione dettagliata:</label>
-                <p class="text-sm text-gray-700 bg-blue-50 p-2 rounded border-l-4 border-blue-200">
-                  {{ todo.description }}
-                </p>
+                <textarea 
+                  v-model="todo.description" :disabled="!todo.selected"
+                  @input="updateTodoDescription(todo.id, ($event.target as HTMLTextAreaElement)?.value || '')"
+                  class="w-full text-sm text-gray-700 bg-blue-50 p-2 rounded border-l-4 border-blue-200 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows="3"
+                  :placeholder="todo.description || 'Aggiungi una descrizione dettagliata per questo TODO...'"
+                ></textarea>
               </div>
               <p class="text-xs text-gray-500 mt-1">{{ todo.file }}</p>
             </div>
@@ -288,6 +292,33 @@ const selectAllTodos = () => {
 const deselectAllTodos = () => {
   (todos.value ?? []).forEach(todo => todo.selected = false)
   vscode.postMessage({ type: 'deselectAllTodos' })
+}
+
+const updateTodoDescription = (todoId: string, newDescription: string) => {
+  const todo = (todos.value ?? []).find(t => t.id === todoId)
+  if (todo) {
+    // Aggiorna immediatamente la UI locale
+    todo.description = newDescription
+    
+    // Debounce l'invio al backend per evitare troppi messaggi
+    debouncedUpdateDescription(todoId, newDescription)
+  }
+}
+
+// Funzione debounced per ridurre i messaggi al backend
+let descriptionUpdateTimeout: ReturnType<typeof setTimeout> | null = null
+const debouncedUpdateDescription = (todoId: string, description: string) => {
+  if (descriptionUpdateTimeout) {
+    clearTimeout(descriptionUpdateTimeout)
+  }
+  
+  descriptionUpdateTimeout = setTimeout(() => {
+    vscode.postMessage({ 
+      type: 'updateTodoDescription', 
+      todoId, 
+      description 
+    })
+  }, 500) // Attende 500ms prima di inviare
 }
 
 const loadRepos = () => {

@@ -6,12 +6,13 @@ A powerful Visual Studio Code extension that automatically transforms TODO comme
 
 - **Automatic Scanning**: Finds all TODOs in your workspace
 - **Smart Description Extraction**: Automatically extracts detailed descriptions from multi-line comments
+- **Editable Descriptions**: Modify and enhance descriptions directly in the interface
 - **Multi-Platform Support**: Create issues on GitHub and GitLab
 - **Modern Interface**: WebView built with Vue3 + Tailwind CSS
 - **Secure Authentication**: Safely stores your tokens
 - **Granular Selection**: Choose which TODOs to convert
 - **Repository Management**: Select the target repository
-- **Rich Issue Content**: Creates detailed issues with context and descriptions
+- **Structured Issue Format**: Creates well-organized issues with clean titles and detailed bodies
 
 ## 📋 Prerequisites
 
@@ -54,20 +55,25 @@ npm run build:webview
 2. Run `IssueFlow: Open TODO Manager`
 3. Log in to GitHub and/or GitLab by entering your Personal Access Tokens
 
-### 2. TODO Scanning
+### 2. TODO Scanning and Editing
 
 1. Click "Scan Workspace" to find all TODOs in your project
-2. Review the found TODOs with their detailed descriptions (when available)
-3. Select the TODOs you want to convert into issues
-4. Use "Select All" or "Deselect All" for quick management
+2. Review the found TODOs with their automatically extracted descriptions
+3. **Edit descriptions**: Click on any selected TODO to edit its description in the textarea
+4. Select the TODOs you want to convert into issues
+5. Use "Select All" or "Deselect All" for quick management
 
-**Note**: The extension automatically extracts detailed descriptions from multi-line TODO comments, showing you both the basic content and the full context in the interface.
+**Features:**
+- **Smart extraction**: Automatically combines multi-line TODO comments into detailed descriptions
+- **Editable descriptions**: Modify or enhance descriptions directly in the interface
+- **Real-time preview**: See how your TODOs will appear as issues before creating them
 
 ### 3. Issue Creation
 
 1. Choose the platform (GitHub or GitLab)
 2. Select the target repository
-3. Click "Create Issue" to generate issues
+3. Review the issue preview to see titles and descriptions
+4. Click "Create Issue" to generate well-structured issues
 
 ## 🔧 Configuration
 
@@ -166,20 +172,20 @@ The extension recognizes these TODO patterns:
 
 IssueFlow automatically extracts detailed descriptions from multi-line TODO comments, creating richer and more informative issues.
 
-#### How it works:
+#### How it works
 
-1. **Basic TODO**: Extracts the immediate text after TODO/FIXME
-2. **Multi-line TODOs**: Combines continuation comments into a detailed description
-3. **Context Analysis**: Looks at surrounding comment lines for additional context
+1. **Content Extraction**: Extracts the immediate text after TODO/FIXME for the title
+2. **Additional Context**: Captures continuation comments as separate description
+3. **Smart Separation**: Keeps the main TODO separate from supporting details to avoid duplication
 
-#### Examples:
+#### Examples
 
 **Single-line TODO:**
 ```javascript
 // TODO: Implement user authentication
 ```
 - **Content**: "Implement user authentication"
-- **Description**: "Implement user authentication"
+- **Description**: "" (empty - no additional context)
 
 **Multi-line TODO with details:**
 ```javascript
@@ -188,7 +194,7 @@ IssueFlow automatically extracts detailed descriptions from multi-line TODO comm
 // Also need to handle session management and token refresh
 ```
 - **Content**: "Implement user authentication"  
-- **Description**: "Implement user authentication This should include OAuth2 integration with Google and GitHub Also need to handle session management and token refresh"
+- **Description**: "This should include OAuth2 integration with Google and GitHub Also need to handle session management and token refresh"
 
 **Block comment TODO:**
 ```javascript
@@ -198,20 +204,48 @@ IssueFlow automatically extracts detailed descriptions from multi-line TODO comm
  */
 ```
 - **Content**: "Performance issue in data processing"
-- **Description**: "Performance issue in data processing The current algorithm has O(n²) complexity Consider implementing a hash-based approach for better performance"
+- **Description**: "The current algorithm has O(n²) complexity Consider implementing a hash-based approach for better performance"
 
-#### In the Generated Issues:
+#### In the Generated Issues
 
-When creating issues, IssueFlow includes both pieces of information:
+When creating issues, IssueFlow creates well-structured and informative issues:
 
-- **Issue Title**: Uses the `content` (short version)
-- **Issue Body**: Includes:
-  - Code location and line number
-  - Full code line in a code block
-  - **Detailed Description** section (when available)
-  - **TODO Content** section
+**Issue Title Format:**
+- Uses only the first line of the TODO comment (the `content`)
+- Clean and concise for easy identification
+- Example: `TODO: Implement user authentication`
 
-This ensures that all context and details from your comments are preserved in the created issues, making them more actionable and informative for your team.
+**Issue Body Structure:**
+1. **File Location**: Shows the exact file path and line number
+2. **Code Context**: The actual code line containing the TODO in a code block
+3. **Complete Description**: All related comment lines combined (when available)
+4. **Original TODO Content**: The first line for reference
+
+**Example Generated Issue:**
+
+**Title:** `TODO: Implement user authentication`
+
+**Body:**
+```markdown
+**File:** src/auth/AuthService.ts (line 45)
+
+**Code:**
+```
+// TODO: Implement user authentication
+```
+
+**Complete Description:**
+This should include OAuth2 integration with Google and GitHub Also need to handle session management and token refresh
+
+**Original TODO Content:** Implement user authentication
+```
+
+This format ensures that:
+- **Titles are clean** and easy to scan in issue lists
+- **No duplication** between title and description content
+- **Additional context** is captured in the description when available
+- **Location information** helps developers find the code quickly
+- **Clear separation** between the main TODO and supporting details
 
 ## 🔐 Security
 

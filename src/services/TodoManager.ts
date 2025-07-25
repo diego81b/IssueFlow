@@ -93,9 +93,6 @@ export class TodoManager {
   }
 
   private extractTodoDescription(lines: string[], todoLineIndex: number): string {
-    const todoLine = lines[todoLineIndex].trim();
-    let description = this.extractTodoContent(todoLine);
-    
     // Look for additional context in the following lines
     const contextLines: string[] = [];
     
@@ -118,7 +115,7 @@ export class TodoManager {
       }
     }
     
-    // Look for context in the previous lines as well
+    // Look for context in the previous lines as well (but less priority)
     const previousContextLines: string[] = [];
     for (let i = todoLineIndex - 1; i >= Math.max(todoLineIndex - 2, 0); i--) {
       const prevLine = lines[i].trim();
@@ -138,11 +135,13 @@ export class TodoManager {
       }
     }
     
-    // Combine all parts
-    const allParts = [...previousContextLines, description, ...contextLines]
-      .filter(part => part.length > 0);
+    // Combine only the additional context lines (exclude the base description)
+    const allParts = [...previousContextLines, ...contextLines]
+      .filter(part => part.length > 0)
+      .filter((part, index, array) => array.indexOf(part) === index); // Remove duplicates
     
-    return allParts.join(' ').trim() || description;
+    // Return the combined additional context, or empty string if no additional context
+    return allParts.join(' ').trim();
   }
 
   private isCommentContinuation(line: string): boolean {
@@ -179,5 +178,12 @@ export class TodoManager {
 
   deselectAllTodos(): void {
     this.todos.forEach(todo => todo.selected = false);
+  }
+
+  updateTodoDescription(todoId: string, newDescription: string): void {
+    const todo = this.todos.find(t => t.id === todoId);
+    if (todo) {
+      todo.description = newDescription;
+    }
   }
 }
