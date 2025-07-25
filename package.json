@@ -50,7 +50,9 @@
     "compile": "tsc -p ./tsconfig.extension.json",
     "watch": "tsc -watch -p ./tsconfig.extension.json",
     "build:webview": "vue-tsc -b && vite build",
-    "dev:webview": "vite",
+    "dev:webview": "vite build --watch",
+    "dev": "concurrently --kill-others \"npm run watch\" \"npm run dev:webview\"",
+    "dev:extension": "npm run watch",
     "build:all": "npm run build:webview && npm run compile",
     "package": "vsce package",
     "publish": "vsce publish",
@@ -68,6 +70,7 @@
     "@types/vscode": "^1.102.0",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vue/tsconfig": "^0.7.0",
+    "concurrently": "^9.2.0",
     "typescript": "~5.8.3",
     "vite": "^7.0.4",
     "vue-tsc": "^2.2.12"

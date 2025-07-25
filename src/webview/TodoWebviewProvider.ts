@@ -113,32 +113,36 @@ export class TodoWebviewProvider implements vscode.WebviewViewProvider {
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
-    const isDev = process.env.VSCODE_DEBUG_MODE === 'true' || process.env.NODE_ENV === 'development';
-    if (isDev) {
-      // Live reload: carica da Vite, senza CSP per evitare errori CORS/HMR
-      return `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <!-- CSP rimossa in dev -->
-        </head>
-        <body>
-          <div id="app"></div>
-          <script type="module" src="http://localhost:5173/src/webview/main.ts"></script>
-        </body>
-        </html>
-      `;
-    }
-    // Read the built HTML file from Vite
+    // Always use built files to avoid CORS issues
+    // In development, Vite will rebuild on changes
     const fs = require('fs');
     const path = require('path');
     
     const distPath = path.join(this._extensionUri.fsPath, 'dist');
     const htmlPath = path.join(distPath, 'index.html');
     
-    let html = fs.readFileSync(htmlPath, 'utf8');
+    let html;
+    try {
+      html = fs.readFileSync(htmlPath, 'utf8');
+    } catch (error) {
+      // Fallback if dist doesn't exist yet
+      return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Building...</title>
+        </head>
+        <body>
+          <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+            <h2>Building webview...</h2>
+            <p>Please run: <code>npm run build:webview</code></p>
+            <p>Or use: <code>npm run dev</code> for live development</p>
+          </div>
+        </body>
+        </html>
+      `;
+    }
     
     // Replace paths with webview URIs
     const distUri = webview.asWebviewUri(vscode.Uri.file(distPath));

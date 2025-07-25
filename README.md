@@ -133,28 +133,46 @@ To run the extension in debug mode:
 
 ### Development Workflow
 
-For active development:
+#### Quick Start Development
 
-1. **Watch mode for extension code**:
+1. **Install dependencies:**
    ```bash
-   npm run watch
+   npm install
    ```
 
-2. **For webview changes**:
-   - Make changes to Vue files
-   - Run `npm run build:webview` 
-   - Reload the Extension Development Host window (`Ctrl+R`)
+2. **Start live reload development:**
+   ```bash
+   npm run dev
+   ```
 
-3. **For extension logic changes**:
-   - Changes are auto-compiled if using `npm run watch`
-   - Reload the Extension Development Host window (`Ctrl+R`)
+3. **Launch extension:**
+   - Press **F5** in VS Code
+   - Select "Run Extension (Live Reload)" from debug menu
 
-### Available Scripts
+#### Development Modes
 
-- `npm run compile`: Compile the extension TypeScript
-- `npm run watch`: Watch mode for extension compilation
-- `npm run build:webview`: Production build for Vue3 webview
-- `npm run dev:webview`: Dev server for webview (UI development)
+| Command | Purpose | Features |
+|---------|---------|----------|
+| `npm run dev` | Full development | TypeScript watch + Vite dev server |
+| `npm run dev:extension` | Extension only | TypeScript compilation watch |
+| `npm run dev:webview` | Webview only | Vite dev server for Vue components |
+
+#### Live Reload Features
+
+- **Automatic Detection**: Extension detects development mode via environment variables
+- **Hot Reload**: Vue component changes reflect immediately without reload
+- **TypeScript Watch**: Extension code recompiles automatically (requires window reload)
+- **No Build Required**: Webview loads directly from `http://localhost:5173` in dev mode
+
+#### Development vs Production
+
+- **Development**: Webview loads from Vite dev server, CSP disabled for HMR
+- **Production**: Webview loads from built `dist/index.html`, full CSP enabled
+
+#### Debugging
+
+- **Extension**: Use VS Code debugger with breakpoints in TypeScript files
+- **Webview**: Right-click webview → "Inspect Element" for browser dev tools
 
 ### Supported TODO Formats
 
