@@ -2,7 +2,7 @@
   "name": "issue-flow",
   "displayName": "IssueFlow",
   "description": "Transform TODO comments into GitHub/GitLab issues",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.102.0"
   },
