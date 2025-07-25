@@ -1,146 +1,146 @@
 # IssueFlow - VS Code Extension
 
-Una potente estensione per Visual Studio Code che trasforma automaticamente i commenti TODO nel tuo codice in issue su GitHub o GitLab.
+A powerful Visual Studio Code extension that automatically transforms TODO comments in your code into issues on GitHub or GitLab.
 
-## 🚀 Funzionalità
+## 🚀 Features
 
-- **Scansione Automatica**: Trova tutti i TODO nel workspace
-- **Supporto Multi-Piattaforma**: Crea issue su GitHub e GitLab
-- **Interfaccia Moderna**: WebView Vue3 + Tailwind CSS
-- **Autenticazione Sicura**: Salva i token in modo sicuro
-- **Selezione Granulare**: Scegli quali TODO convertire
-- **Gestione Repository**: Seleziona il repository di destinazione
+- **Automatic Scanning**: Finds all TODOs in your workspace
+- **Multi-Platform Support**: Create issues on GitHub and GitLab
+- **Modern Interface**: WebView built with Vue3 + Tailwind CSS
+- **Secure Authentication**: Safely stores your tokens
+- **Granular Selection**: Choose which TODOs to convert
+- **Repository Management**: Select the target repository
 
-## 📋 Prerequisiti
+## 📋 Prerequisites
 
-- Visual Studio Code 1.74.0 o superiore
+- Visual Studio Code 1.74.0 or higher
 - Node.js 18+ 
-- Account GitHub e/o GitLab con Personal Access Token
+- GitHub and/or GitLab account with Personal Access Token
 
-## 🛠️ Installazione
+## 🛠️ Installation
 
-### Sviluppo
+### Development
 
-1. Clona il repository:
+1. Clone the repository:
 ```bash
 git clone https://github.com/your-username/issue-flow.git
 cd issue-flow
 ```
 
-2. Installa le dipendenze:
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-3. Compila l'estensione:
+3. Compile the extension:
 ```bash
 npm run compile
 ```
 
-4. Build della webview:
+4. Build the webview:
 ```bash
 npm run build:webview
 ```
 
-5. Premi F5 per avviare una nuova finestra di VS Code con l'estensione caricata
+5. Press F5 to launch a new VS Code window with the extension loaded
 
-## 🎯 Come Usare
+## 🎯 How to Use
 
-### 1. Setup Iniziale
+### 1. Initial Setup
 
-1. Apri la Command Palette (`Ctrl+Shift+P`)
-2. Esegui `IssueFlow: Open TODO Manager`
-3. Effettua il login su GitHub e/o GitLab inserendo i tuoi Personal Access Token
+1. Open the Command Palette (`Ctrl+Shift+P`)
+2. Run `IssueFlow: Open TODO Manager`
+3. Log in to GitHub and/or GitLab by entering your Personal Access Tokens
 
-### 2. Scansione TODO
+### 2. TODO Scanning
 
-1. Clicca su "Scansiona Workspace" per trovare tutti i TODO nel progetto
-2. Seleziona i TODO che vuoi convertire in issue
-3. Puoi usare "Seleziona tutti" o "Deseleziona tutti" per gestione rapida
+1. Click "Scan Workspace" to find all TODOs in your project
+2. Select the TODOs you want to convert into issues
+3. Use "Select All" or "Deselect All" for quick management
 
-### 3. Creazione Issue
+### 3. Issue Creation
 
-1. Scegli la piattaforma (GitHub o GitLab)
-2. Seleziona il repository di destinazione
-3. Clicca su "Crea Issue" per generare le issue
+1. Choose the platform (GitHub or GitLab)
+2. Select the target repository
+3. Click "Create Issue" to generate issues
 
-## 🔧 Configurazione
+## 🔧 Configuration
 
-L'estensione utilizza queste impostazioni in VS Code:
+The extension uses these VS Code settings:
 
-- `issueflow.githubToken`: Token per GitHub (salvato in modo sicuro)
-- `issueflow.gitlabToken`: Token per GitLab (salvato in modo sicuro)  
-- `issueflow.gitlabUrl`: URL dell'istanza GitLab (default: https://gitlab.com)
+- `issueflow.githubToken`: GitHub token (stored securely)
+- `issueflow.gitlabToken`: GitLab token (stored securely)  
+- `issueflow.gitlabUrl`: GitLab instance URL (default: https://gitlab.com)
 
-## 🏗️ Architettura del Progetto
+## 🏗️ Project Architecture
 
 ```
 ├── src/
-│   ├── extension.ts              # Entry point dell'estensione
+│   ├── extension.ts              # Extension entry point
 │   ├── services/
-│   │   ├── TodoManager.ts        # Scansione e gestione TODO
-│   │   ├── github.ts            # Servizio GitHub API
-│   │   └── gitlab.ts            # Servizio GitLab API
+│   │   ├── TodoManager.ts        # TODO scanning and management
+│   │   ├── github.ts             # GitHub API service
+│   │   └── gitlab.ts             # GitLab API service
 │   ├── webview/
-│   │   ├── TodoWebviewProvider.ts # Provider per la webview
-│   │   ├── App.vue              # App Vue3 principale
-│   │   ├── main.ts              # Entry point Vue
-│   │   └── style.css            # Stili base
-├── dist/                        # Build output webview
-├── out/                         # Build output estensione
+│   │   ├── TodoWebviewProvider.ts # Webview provider
+│   │   ├── App.vue               # Main Vue3 app
+│   │   ├── main.ts               # Vue entry point
+│   │   └── style.css             # Base styles
+├── dist/                         # Webview build output
+├── out/                          # Extension build output
 ├── package.json
-├── vite.config.ts              # Config Vite per webview
-├── tsconfig.extension.json      # Config TypeScript estensione
-└── tsconfig.app.json           # Config TypeScript webview
+├── vite.config.ts                # Vite config for webview
+├── tsconfig.extension.json       # TypeScript config for extension
+└── tsconfig.app.json             # TypeScript config for webview
 ```
 
-## 🧑‍💻 Sviluppo
+## 🧑‍💻 Development
 
-### Script Disponibili
+### Available Scripts
 
-- `npm run compile`: Compila l'estensione TypeScript
-- `npm run watch`: Watch mode per compilazione estensione
-- `npm run build:webview`: Build produzione webview Vue3
-- `npm run dev:webview`: Dev server webview (per sviluppo UI)
+- `npm run compile`: Compile the extension TypeScript
+- `npm run watch`: Watch mode for extension compilation
+- `npm run build:webview`: Production build for Vue3 webview
+- `npm run dev:webview`: Dev server for webview (UI development)
 
-### Formati TODO Supportati
+### Supported TODO Formats
 
-L'estensione riconosce questi pattern di TODO:
+The extension recognizes these TODO patterns:
 
 ```typescript
-// TODO: Implementare feature X
-/* TODO: Refactor questo codice */
-# TODO: Aggiungere test
-<!-- TODO: Migliorare UX -->
-// FIXME: Bug da correggere
+// TODO: Implement feature X
+/* TODO: Refactor this code */
+# TODO: Add tests
+<!-- TODO: Improve UX -->
+// FIXME: Bug to fix
 ```
 
-## 🔐 Sicurezza
+## 🔐 Security
 
-- I token sono salvati in modo sicuro usando l'API di VS Code
-- Comunicazione HTTPS con GitHub/GitLab API
-- Nessun dato sensibile memorizzato in chiaro
+- Tokens are securely stored using the VS Code API
+- HTTPS communication with GitHub/GitLab APIs
+- No sensitive data stored in plain text
 
-## 🤝 Contribuire
+## 🤝 Contributing
 
-1. Fork del progetto
-2. Crea un branch per la feature (`git checkout -b feature/amazing-feature`)
-3. Commit delle modifiche (`git commit -m 'Add amazing feature'`)
-4. Push del branch (`git push origin feature/amazing-feature`)
-5. Apri una Pull Request
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📝 Licenza
+## 📝 License
 
-Questo progetto è distribuito sotto licenza MIT. Vedi `LICENSE` per maggiori informazioni.
+This project is licensed under the MIT License. See `LICENSE` for details.
 
-## 🆘 Supporto
+## 🆘 Support
 
-Se hai problemi o domande:
+If you have issues or questions:
 
-1. Controlla la [documentazione](https://github.com/your-username/issue-flow/wiki)
-2. Cerca nelle [Issues esistenti](https://github.com/your-username/issue-flow/issues)
-3. Apri una [nuova Issue](https://github.com/your-username/issue-flow/issues/new)
+1. Check the [documentation](https://github.com/your-username/issue-flow/wiki)
+2. Search [existing Issues](https://github.com/your-username/issue-flow/issues)
+3. Open a [new Issue](https://github.com/your-username/issue-flow/issues/new)
 
 ---
 
-Creato con ❤️ per sviluppatori che vogliono trasformare i TODO in azioni concrete!
+Created with ❤️ for developers who want to turn TODOs into real actions!

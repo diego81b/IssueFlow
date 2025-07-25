@@ -2,7 +2,7 @@
   "name": "issue-flow",
   "displayName": "IssueFlow",
   "description": "Transform TODO comments into GitHub/GitLab issues",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.102.0"
   },
@@ -53,8 +53,8 @@
     "build:webview": "vue-tsc -b && vite build",
     "dev:webview": "vite",
     "build:all": "npm run compile && npm run build:webview",
-    "vsce:package": "vsce package",
-    "vsce:publish": "vsce publish",
+    "package": "vsce package",
+    "publish": "vsce publish",
     "publish:all": "npm run build:all && npm run vsce:package && npm run vsce:publish"
   },
   "dependencies": {
