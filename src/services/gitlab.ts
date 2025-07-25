@@ -155,7 +155,7 @@ export class GitLabService {
       },
       body: JSON.stringify({
         title,
-        description,
+        description: description, // Use note as description
       }),
     });
 

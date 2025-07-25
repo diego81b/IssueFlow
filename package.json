@@ -47,12 +47,11 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./tsconfig.extension.json",
     "watch": "tsc -watch -p ./tsconfig.extension.json",
     "build:webview": "vue-tsc -b && vite build",
     "dev:webview": "vite",
-    "build:all": "npm run compile && npm run build:webview",
+    "build:all": "npm run build:webview && npm run compile",
     "package": "vsce package",
     "publish": "vsce publish",
     "publish:all": "npm run build:all && npm run vsce:package && npm run vsce:publish"

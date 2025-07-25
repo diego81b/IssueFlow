@@ -1,23 +1,28 @@
 <template>
-  <div class="max-w-6xl mx-auto space-y-6">
+  <div class="max-w-6xl mx-auto space-y-4">
     <!-- Scan Section -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-bold text-gray-800 mb-4">Scansione Workspace</h2>
-      <p class="text-gray-600 mb-4">
-        Trova tutti i commenti TODO e FIXME nel tuo workspace per convertirli in issue.
-      </p>
-      
-      <button 
-        @click="scanTodos"
-        :disabled="loadingScan"
-        class="bg-blue-600 text-white py-3 px-6 rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
-      >
-        <svg v-if="loadingScan" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-        </svg>
-        <span>{{ loadingScan ? 'Scansione...' : 'Scansiona Workspace' }}</span>
-      </button>
+    <div class="bg-white rounded-lg shadow-md p-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex-1">
+          <h2 class="text-xl font-bold text-gray-800 mb-2">Scansione Workspace</h2>
+          <p class="text-sm text-gray-600">
+            Trova tutti i commenti TODO e FIXME nel tuo workspace per convertirli in issue.
+          </p>
+        </div>
+        <div class="flex-shrink-0">
+          <button 
+            @click="scanTodos"
+            :disabled="loadingScan"
+            class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+          >
+            <svg v-if="loadingScan" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <span>{{ loadingScan ? 'Scansione...' : 'Scansiona Workspace' }}</span>
+          </button>
+        </div>
+      </div>
     </div>
     
     <!-- TODO List Section -->
@@ -57,7 +62,7 @@
       </div>
 
       <!-- TODO List -->
-      <div class="max-h-96 overflow-y-auto space-y-2">
+      <div class="max-h-[32rem] overflow-y-auto space-y-2">
         <div 
           v-for="todo in filteredTodos" 
           :key="todo.id"
@@ -78,9 +83,15 @@
                   {{ todo.content.includes('FIXME') ? 'FIXME' : 'TODO' }}
                 </span>
               </div>
-              <p class="text-sm text-gray-600 font-mono bg-gray-50 p-2 rounded">
+              <p class="text-sm text-gray-600 font-mono bg-gray-50 p-2 rounded mb-2">
                 {{ todo.fullLine.trim() }}
               </p>
+              <div v-if="todo.selected || todo.description" class="mb-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Descrizione dettagliata:</label>
+                <p class="text-sm text-gray-700 bg-blue-50 p-2 rounded border-l-4 border-blue-200">
+                  {{ todo.description }}
+                </p>
+              </div>
               <p class="text-xs text-gray-500 mt-1">{{ todo.file }}</p>
             </div>
           </div>
@@ -171,7 +182,10 @@
                 {{ todo.content.includes('FIXME') ? 'FIXME' : 'TODO' }}
               </span>
             </div>
-            <p class="text-sm text-gray-600">{{ todo.content }}</p>
+            <p class="text-sm text-gray-600 mb-1">{{ todo.content }}</p>
+            <div v-if="todo.description && todo.description !== todo.content" class="text-xs text-gray-500 bg-white p-2 rounded">
+              <strong>Descrizione:</strong> {{ todo.description }}
+            </div>
           </div>
           <p v-if="selectedTodos.length > 3" class="text-sm text-gray-500 text-center">
             ... e altre {{ selectedTodos.length - 3 }} issue
@@ -344,6 +358,7 @@ const createIssues = () => {
     line: todo.line,
     content: todo.content,
     fullLine: todo.fullLine,
+    description: todo.description,
     selected: todo.selected
   }))
   

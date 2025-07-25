@@ -4,5 +4,6 @@ export interface TodoItem {
   line: number
   content: string
   fullLine: string
+  description: string
   selected: boolean
 }

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { TodoManager } from '../services/TodoManager';
-import type { TodoItem } from '../services/TodoManager';
+import type { TodoItem } from '../webview/types/TodoItem';
 import { GitHubService } from '../services/github';
 import { GitLabService } from '../services/gitlab';
 
@@ -293,7 +293,15 @@ export class TodoWebviewProvider implements vscode.WebviewViewProvider {
         console.log('Creating issue for todo:', todo);
         
         const title = `TODO: ${todo.content || `Linea ${todo.line}`}`;
-        const body = `TODO trovato in ${todo.file} alla linea ${todo.line}:\n\n\`\`\`\n${todo.fullLine}\n\`\`\`\n\nDescrizione: ${todo.content}`;
+        
+        // Create a more detailed body with the description
+        let body = `TODO trovato in ${todo.file} alla linea ${todo.line}:\n\n\`\`\`\n${todo.fullLine}\n\`\`\`\n\n`;
+        
+        if (todo.description && todo.description !== todo.content) {
+          body += `**Descrizione dettagliata:**\n${todo.description}\n\n`;
+        }
+        
+        body += `**Contenuto TODO:** ${todo.content}`;
 
         console.log('Issue details:', { title, body });
 

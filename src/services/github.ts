@@ -63,7 +63,7 @@ export class GitHubService {
       },
       body: JSON.stringify({
         title,
-        body,
+        body, // Use note as body
       }),
     });
 
