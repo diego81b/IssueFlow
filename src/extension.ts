@@ -21,10 +21,6 @@ export function activate(context: vscode.ExtensionContext) {
   const reconfigureGitLab = vscode.commands.registerCommand('issueflow.reconfigureGitLab', async () => {
     try {
       await gitlabService.reconfigureGitLab();
-      
-      // Update auth status in current webview if open
-      TodoWebviewProvider.updateAuthStatus(githubService, gitlabService);
-      
       vscode.window.showInformationMessage('GitLab riconfigurato con successo!');
     } catch (error) {
       vscode.window.showErrorMessage(`Errore nella riconfigurazione GitLab: ${error}`);

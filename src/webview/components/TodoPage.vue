@@ -1,212 +1,46 @@
 <template>
-  <div class="max-w-6xl mx-auto space-y-4">
-    <!-- Scan Section -->
-    <div class="bg-white rounded-lg shadow-md p-4">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div class="flex-1">
-          <h2 class="text-xl font-bold text-gray-800 mb-2">Scansione Workspace</h2>
-          <p class="text-sm text-gray-600">
-            Trova tutti i commenti TODO e FIXME nel tuo workspace per convertirli in issue.
-          </p>
-        </div>
-        <div class="flex-shrink-0">
-          <button 
-            @click="scanTodos"
-            :disabled="loadingScan"
-            class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
-          >
-            <svg v-if="loadingScan" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-            </svg>
-            <span>{{ loadingScan ? 'Scansione...' : 'Scansiona Workspace' }}</span>
-          </button>
-        </div>
-      </div>
-    </div>
+  <div class="h-screen flex flex-col max-w-6xl mx-auto space-y-4 p-4">
+    <!-- Workspace Scan Section -->
+    <WorkspaceScanSection 
+      :loading="loadingScan"
+      @scan="scanTodos"
+    />
     
     <!-- TODO List Section -->
-    <div v-if="(todos ?? []).length > 0" class="bg-white rounded-lg shadow-md p-6">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-bold text-gray-800">TODO Trovati</h2>
-        <div class="flex items-center space-x-4">
-          <span class="text-sm text-gray-600">{{ (todos ?? []).length }} elementi trovati</span>
-          <div class="flex space-x-2">
-            <button 
-              @click="selectAllTodos"
-              class="text-blue-600 hover:text-blue-800 text-sm"
-            >
-              Seleziona tutti
-            </button>
-            <button 
-              @click="deselectAllTodos"
-              class="text-blue-600 hover:text-blue-800 text-sm"
-            >
-              Deseleziona tutti
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- TODO Controls -->
-      <div class="flex items-center justify-between p-3 bg-gray-50 rounded mb-4">
-        <span class="text-sm text-gray-600">
-          {{ selectedTodos.length }} di {{ (todos ?? []).length }} selezionati
-        </span>
-        <div class="flex items-center space-x-4">
-          <label class="flex items-center space-x-2">
-            <input type="checkbox" v-model="showOnlySelected" class="rounded">
-            <span class="text-sm text-gray-600">Mostra solo selezionati</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- TODO List -->
-      <div class="max-h-[32rem] overflow-y-auto space-y-2">
-        <div 
-          v-for="todo in filteredTodos" 
-          :key="todo.id"
-          class="border rounded p-4 hover:bg-gray-50 transition-colors"
-        >
-          <div class="flex items-start space-x-3">
-            <input 
-              type="checkbox" 
-              :checked="todo.selected"
-              @change="toggleTodo(todo.id)"
-              class="mt-1 rounded"
-            />
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center space-x-2 mb-2">
-                <span class="text-sm font-medium text-gray-800">{{ getFileName(todo.file) }}</span>
-                <span class="text-xs text-gray-500">linea {{ todo.line }}</span>
-                <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                  {{ todo.content.includes('FIXME') ? 'FIXME' : 'TODO' }}
-                </span>
-              </div>
-              <p class="text-sm text-gray-600 font-mono bg-gray-50 p-2 rounded mb-2">
-                {{ todo.fullLine.trim() }}
-              </p>
-              <div v-if="todo.selected || todo.description" class="mb-2">
-                <label class="block text-xs font-medium text-gray-700 mb-1">Descrizione dettagliata:</label>
-                <textarea 
-                  v-model="todo.description" :disabled="!todo.selected"
-                  @input="updateTodoDescription(todo.id, ($event.target as HTMLTextAreaElement)?.value || '')"
-                  class="w-full text-sm text-gray-700 bg-blue-50 p-2 rounded border-l-4 border-blue-200 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  rows="3"
-                  :placeholder="todo.description || 'Aggiungi una descrizione dettagliata per questo TODO...'"
-                ></textarea>
-              </div>
-              <p class="text-xs text-gray-500 mt-1">{{ todo.file }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <TodoListSection
+      v-if="appState?.todos?.value && appState.todos.value.length > 0"
+      :todos="appState.todos.value"
+      :selectedCount="selectedTodos.length"
+      @selectAll="selectAllTodos"
+      @deselectAll="deselectAllTodos"
+      @toggle="toggleTodo"
+      @updateDescription="updateTodoDescription"
+    />
 
     <!-- No TODOs Found -->
-    <div v-else-if="!loading && hasScanned" class="bg-white rounded-lg shadow-md p-6 text-center">
-      <div class="text-gray-400 text-6xl mb-4">📝</div>
-      <h3 class="text-lg font-medium text-gray-800 mb-2">Nessun TODO trovato</h3>
-      <p class="text-gray-600">
-        Non sono stati trovati commenti TODO o FIXME nel workspace corrente.
-      </p>
-    </div>
+    <NoTodosFoundSection
+      v-if="!appState?.todos?.value || appState.todos.value.length === 0"
+    />
 
     <!-- Issue Creation Section -->
-    <div v-if="selectedTodos.length > 0" class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-bold text-gray-800 mb-4">Crea Issue</h2>
-      <p class="text-gray-600 mb-6">
-        Seleziona la piattaforma e il repository dove creare le issue per i TODO selezionati.
-      </p>
-
-      <div class="grid md:grid-cols-2 gap-6">
-        <!-- Platform Selection -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Piattaforma</label>
-          <select 
-            v-model="selectedPlatform"
-            @change="loadRepos"
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Seleziona piattaforma</option>
-            <option value="github" :disabled="!(authStatus ?? {}).github">
-              GitHub {{ !(authStatus ?? {}).github ? '(non autenticato)' : '' }}
-            </option>
-            <option value="gitlab" :disabled="!(authStatus ?? {}).gitlab">
-              GitLab {{ !(authStatus ?? {}).gitlab ? '(non autenticato)' : '' }}
-            </option>
-          </select>
-          <p v-if="selectedPlatform && !(authStatus && (authStatus as Record<string, boolean>)[selectedPlatform])"
-             class="text-xs text-red-600 mt-2">
-            Devi autenticarti su {{ selectedPlatform }} per creare issue.
-          </p>
-        </div>
-
-        <!-- Repo Selection -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Repository</label>
-          <select 
-            v-model="selectedRepo"
-            :disabled="!selectedPlatform || (repos ?? []).length === 0"
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="" disabled>
-              {{ (repos ?? []).length === 0 ? 'Nessun repository disponibile' : 'Seleziona repository' }}
-            </option>
-            <option v-for="repo in repos ?? []" :key="repo.id" :value="repo">
-              {{ repo.name }}
-            </option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Create Issues Button -->
-      <div class="mt-6">
-        <button 
-          @click="createIssues"
-          :disabled="loading || !selectedRepo || selectedTodos.length === 0"
-          class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {{ loading ? 'Creazione...' : `Crea ${selectedTodos.length} Issue su ${selectedPlatform}` }}
-        </button>
-      </div>
-
-      <!-- Issue Preview -->
-      <div v-if="selectedRepo && selectedTodos.length > 0" class="mt-6">
-        <h3 class="text-lg font-medium text-gray-800 mb-3">Anteprima Issue</h3>
-        <div class="max-h-48 overflow-y-auto space-y-2">
-          <div 
-            v-for="todo in selectedTodos.slice(0, 3)" 
-            :key="todo.id"
-            class="bg-gray-50 border rounded-lg p-3"
-          >
-            <div class="flex items-center space-x-2 mb-1">
-              <span class="text-sm font-medium">{{ getFileName(todo.file) }}:{{ todo.line }}</span>
-              <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                {{ todo.content.includes('FIXME') ? 'FIXME' : 'TODO' }}
-              </span>
-            </div>
-            <p class="text-sm text-gray-600 mb-1">{{ todo.content }}</p>
-            <div v-if="todo.description && todo.description !== todo.content" class="text-xs text-gray-500 bg-white p-2 rounded">
-              <strong>Descrizione:</strong> {{ todo.description }}
-            </div>
-          </div>
-          <p v-if="selectedTodos.length > 3" class="text-sm text-gray-500 text-center">
-            ... e altre {{ selectedTodos.length - 3 }} issue
-          </p>
-        </div>
-      </div>
-    </div>
+    <IssueCreationSection
+      v-if="selectedTodos.length > 0"
+      :selectedTodos="selectedTodos"
+      :selectedPlatform="appState?.selectedPlatform?.value ?? ''"
+      :selectedRepo="appState?.selectedRepo?.value ?? null"
+      :repos="appState?.repos?.value ?? []"
+      :authStatus="appState?.authStatus?.value ?? null"
+      :loading="loadingCreate"
+      @platformChange="handlePlatformChange"
+      @repoChange="handleRepoChange"
+      @createIssues="createIssues"
+    />
 
     <!-- Local Message -->
-    <div v-if="localMessage" :class="{
-      'bg-green-50 text-green-800 border-green-200': localMessageType === 'success',
-      'bg-blue-50 text-blue-800 border-blue-200': localMessageType === 'info',
-      'bg-red-50 text-red-800 border-red-200': localMessageType === 'error',
-    }"
-    class="border rounded-lg p-4 mb-4">
-      {{ localMessage }}
-    </div>
+    <LocalMessage
+      :message="localMessage"
+      :type="localMessageType"
+    />
   </div>
 </template>
 
@@ -216,191 +50,160 @@ import type { AppState } from '../composables/useAppState'
 import type { TodoItem } from '../types/TodoItem'
 import type { Repository } from '../types/Repository'
 
+// Import components
+import WorkspaceScanSection from './WorkspaceScanSection.vue'
+import TodoListSection from './TodoListSection.vue'
+import NoTodosFoundSection from './NoTodosFoundSection.vue'
+import IssueCreationSection from './IssueCreationSection.vue'
+import LocalMessage from './LocalMessage.vue'
+
 const appState = inject<AppState>('appState')
-const {
-  todos,
-  authStatus,
-  loading,
-  selectedPlatform,
-  selectedRepo,
-  repos,
-  vscode
-} = appState ?? {
-  todos: ref<TodoItem[]>([]),
-  authStatus: ref({ github: false, gitlab: false }),
-  loading: ref(false),
-  selectedPlatform: ref(''),
-  selectedRepo: ref<Repository | null>(null),
-  repos: ref<Repository[]>([]),
-  vscode: { postMessage: () => {} }
-}
 
 // Local state
-const showOnlySelected = ref(false)
-const hasScanned = ref(false)
-const localMessage = ref('')
-const localMessageType = ref<'success' | 'error' | 'info'>('info')
 const loadingScan = ref(false)
+const loadingCreate = ref(false)
+const localMessage = ref<string | null>(null)
+const localMessageType = ref<'success' | 'info' | 'error'>('info')
 
-// Local computed
-const selectedTodos = computed(() => (todos.value ?? []).filter(todo => todo.selected))
-const filteredTodos = computed(() => {
-  return showOnlySelected.value 
-    ? (todos.value ?? []).filter(todo => todo.selected)
-    : (todos.value ?? [])
+// Computed properties
+const selectedTodos = computed(() => {
+  return (appState?.todos?.value ?? []).filter((todo: TodoItem) => todo.selected)
 })
 
-const showLocalMessage = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
-  localMessage.value = text
-  localMessageType.value = type
-  setTimeout(() => {
-    localMessage.value = ''
-  }, 4000)
-}
-
-const getFileName = (filePath: string) => {
-  return filePath.split(/[\\/]/).pop() || filePath
-}
-
+// Functions
 const scanTodos = () => {
-  loadingScan.value = true
-  hasScanned.value = true
-  vscode.postMessage({ type: 'scanTodos' })
-}
-
-// Ricevi messaggio di fine scansione (aggiungi questo listener se non già presente)
-window.addEventListener('message', event => {
-  const message = event.data
-  if (message.type === 'scanTodosDone') {
-    loadingScan.value = false
-  }
-})
-
-const toggleTodo = (todoId: string) => {
-  const todo = (todos.value ?? []).find(t => t.id === todoId)
-  if (todo) {
-    todo.selected = !todo.selected
-  }
-  vscode.postMessage({ type: 'toggleTodo', todoId })
+  if (loadingScan.value) return;
+  loadingScan.value = true;
+  appState?.vscode.postMessage({ type: 'scanTodos' })
 }
 
 const selectAllTodos = () => {
-  (todos.value ?? []).forEach(todo => todo.selected = true)
-  vscode.postMessage({ type: 'selectAllTodos' })
+  // Gestisci direttamente nell'appState
+  if (appState?.todos?.value) {
+    appState.todos.value.forEach(todo => todo.selected = true)
+  }
 }
 
 const deselectAllTodos = () => {
-  (todos.value ?? []).forEach(todo => todo.selected = false)
-  vscode.postMessage({ type: 'deselectAllTodos' })
-}
-
-const updateTodoDescription = (todoId: string, newDescription: string) => {
-  const todo = (todos.value ?? []).find(t => t.id === todoId)
-  if (todo) {
-    // Aggiorna immediatamente la UI locale
-    todo.description = newDescription
-    
-    // Debounce l'invio al backend per evitare troppi messaggi
-    debouncedUpdateDescription(todoId, newDescription)
+  // Gestisci direttamente nell'appState
+  if (appState?.todos?.value) {
+    appState.todos.value.forEach(todo => todo.selected = false)
   }
 }
 
-// Funzione debounced per ridurre i messaggi al backend
-let descriptionUpdateTimeout: ReturnType<typeof setTimeout> | null = null
-const debouncedUpdateDescription = (todoId: string, description: string) => {
-  if (descriptionUpdateTimeout) {
-    clearTimeout(descriptionUpdateTimeout)
+const toggleTodo = (todoId: string) => {
+  // Gestisci direttamente nell'appState invece di passare dal provider
+  if (appState?.todos?.value) {
+    const todo = appState.todos.value.find(t => t.id === todoId)
+    if (todo) {
+      todo.selected = !todo.selected
+    }
   }
-  
-  descriptionUpdateTimeout = setTimeout(() => {
-    vscode.postMessage({ 
-      type: 'updateTodoDescription', 
-      todoId, 
-      description 
-    })
-  }, 500) // Attende 500ms prima di inviare
+}
+
+const updateTodoDescription = (todoId: string, description: string) => {
+  // Aggiorna direttamente nell'appState - niente sincronizzazione backend
+  if (appState?.todos?.value) {
+    const todo = appState.todos.value.find(t => t.id === todoId)
+    if (todo) {
+      todo.description = description
+    }
+  }
 }
 
 const loadRepos = () => {
-  console.log('loadRepos called, selectedPlatform:', selectedPlatform.value)
-  console.log('Current auth status:', authStatus.value)
+  if (!appState?.vscode || !appState?.selectedPlatform?.value) return;
   
-  if (!selectedPlatform.value) {
-    console.log('No platform selected, returning')
-    return
+  appState.vscode.postMessage({ 
+    type: 'loadRepos', 
+    platform: appState.selectedPlatform.value 
+  })
+}
+
+const handlePlatformChange = (platform: string) => {
+  if (appState?.selectedPlatform) {
+    appState.selectedPlatform.value = platform
+    loadRepos()
   }
-  
-  // Check if user is authenticated for the selected platform
-  if (selectedPlatform.value === 'github' && !(authStatus.value ?? { github: false }).github) {
-    console.log('GitHub not authenticated, cannot load repos')
-    showLocalMessage('Devi prima effettuare il login su GitHub', 'error')
-    selectedPlatform.value = '' // Reset selection
-    return
-  }
-  
-  if (selectedPlatform.value === 'gitlab' && !(authStatus.value ?? { gitlab: false }).gitlab) {
-    console.log('GitLab not authenticated, cannot load repos')
-    showLocalMessage('Devi prima effettuare il login su GitLab', 'error')
-    selectedPlatform.value = '' // Reset selection
-    return
-  }
-  
-  loading.value = true
-  repos.value = []
-  selectedRepo.value = null
-  
-  if (selectedPlatform.value === 'github') {
-    console.log('Requesting GitHub repos...')
-    vscode.postMessage({ type: 'getGithubRepos' })
-  } else if (selectedPlatform.value === 'gitlab') {
-    console.log('Requesting GitLab repos...')
-    vscode.postMessage({ type: 'getGitlabRepos' })
+}
+
+const handleRepoChange = (repoString: string) => {
+  if (appState?.selectedRepo) {
+    try {
+      const repo = JSON.parse(repoString) as Repository
+      appState.selectedRepo.value = repo
+    } catch (error) {
+      console.error('Error parsing repository:', error)
+    }
   }
 }
 
 const createIssues = () => {
-  console.log('createIssues called with:', {
-    selectedRepo: selectedRepo.value,
-    selectedTodos: selectedTodos.value,
-    selectedPlatform: selectedPlatform.value
-  })
-  
-  if (!selectedRepo.value || selectedTodos.value.length === 0) {
-    console.warn('Cannot create issues: missing repo or todos')
-    showLocalMessage('Seleziona almeno un TODO e un repository', 'error')
-    return
-  }
-  
-  loading.value = true
-  console.log('Sending createIssues message...')
-  
-  // Create a clean serializable repository object
+  if (!appState?.vscode || !appState?.selectedRepo?.value || selectedTodos.value.length === 0 || loadingCreate.value) return
+
+  loadingCreate.value = true
+
   const repoData = {
-    id: selectedRepo.value.id,
-    name: selectedRepo.value.name,
-    full_name: selectedRepo.value.full_name,
-    path_with_namespace: selectedRepo.value.path_with_namespace
+    id: appState.selectedRepo.value.id,
+    name: appState.selectedRepo.value.name,
+    full_name: appState.selectedRepo.value.full_name || appState.selectedRepo.value.name
   }
-  
-  // Create clean serializable todos array
-  const todosData = selectedTodos.value.map(todo => ({
-    id: todo.id,
-    file: todo.file,
-    line: todo.line,
-    content: todo.content,
-    fullLine: todo.fullLine,
-    description: todo.description,
-    selected: todo.selected
-  }))
   
   console.log('Repo data to send:', repoData)
-  console.log('Todos data to send:', todosData)
+  console.log('Todos data to send:', selectedTodos.value)
   
-  vscode.postMessage({
+  appState.vscode.postMessage({
     type: 'createIssues',
-    platform: selectedPlatform.value,
+    platform: appState?.selectedPlatform?.value,
     repo: repoData,
-    todos: todosData
+    todos: selectedTodos.value
   })
 }
+
+// Listen for messages from extension
+window.addEventListener('message', (event) => {
+  const message = event.data
+  console.log('📨 TodoPage received message:', message.type, message)
+  
+  switch (message.type) {
+    case 'resetAppState':
+      localMessage.value = 'Scansione in corso...'
+      localMessageType.value = 'info'
+      setTimeout(() => {
+        localMessage.value = null
+      }, 2000)
+      break
+    case 'todosScanned':
+      console.log('🔍 todos received in TodoPage:', message.todos)
+      localMessage.value = `${message.todos.length} TODO trovati`
+      localMessageType.value = 'success'
+      setTimeout(() => {
+        localMessage.value = null
+      }, 3000)
+      break;
+    case 'scanTodosDone':
+      console.log('✅ Setting loadingScan to false')
+      loadingScan.value = false
+      break
+    case 'issuesCreated':
+      loadingCreate.value = false
+      localMessage.value = `${message.count} issue create con successo su ${message.platform}`
+      localMessageType.value = 'success'
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        localMessage.value = null
+      }, 3000)
+      break
+    case 'error': 
+      console.log('❌ Error received:', message.message)
+      loadingScan.value = false
+      loadingCreate.value = false
+      localMessage.value = message.message
+      localMessageType.value = 'error'
+      setTimeout(() => {
+        localMessage.value = null
+      }, 5000)
+      break
+  }
+})
 </script>

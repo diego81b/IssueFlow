@@ -10,9 +10,8 @@ export interface AppState {
   selectedPlatform: ReturnType<typeof ref<string>>
   selectedRepo: ReturnType<typeof ref<Repository | null>>
   repos: ReturnType<typeof ref<Repository[]>>
-  message: ReturnType<typeof ref<string>>
-  messageType: ReturnType<typeof ref<'success' | 'error' | 'info'>>
   vscode: any
+  resetTodos: () => void
 }
 
 export function useAppState(): AppState {
@@ -22,10 +21,17 @@ export function useAppState(): AppState {
   const selectedPlatform = ref('')
   const selectedRepo = ref<Repository | null>(null)
   const repos = ref<Repository[]>([])
-  const message = ref('')
-  const messageType = ref<'success' | 'error' | 'info'>('info')
-  // @ts-ignore
-  const vscode = window.acquireVsCodeApi()
+  
+  // Use the global vscode object we set up in index.html
+  const vscode = (window as any).vscode
+
+  const resetTodos = () => {
+    console.log('AppState: resetting todos to empty array')
+    todos.value = []
+    selectedPlatform.value = ''
+    selectedRepo.value = null
+    repos.value = []
+  }
 
   return {
     todos,
@@ -34,8 +40,7 @@ export function useAppState(): AppState {
     selectedPlatform,
     selectedRepo,
     repos,
-    message,
-    messageType,
-    vscode
+    vscode,
+    resetTodos
   }
 }

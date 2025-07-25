@@ -75,17 +75,6 @@
         </button>
       </div>
     </div>
-
-    <!-- Global Loading Overlay -->
-    <div
-      v-if="loading"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    >
-      <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
-        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-        <span>Caricamento...</span>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -96,7 +85,7 @@ import type { AppState } from '../composables/useAppState'
 
 const route = useRoute()
 const appState = inject<AppState>('appState')!
-const { authStatus, loading, message, messageType } = appState
+const { authStatus, message, messageType } = appState
 
 const messageClass = computed(() => {
   const baseClass = 'border rounded-lg p-4 shadow-lg'

@@ -15,13 +15,17 @@ app.provide('appState', appState)
 // Setup message listener
 window.addEventListener('message', event => {
   const message = event.data
-  appState.loading.value = false
+  console.log('main.ts received message:', message.type, message)
   
   switch (message.type) {
+    case 'resetAppState':
+      console.log('Resetting appState...')
+      appState.resetTodos()
+      break
+      
     case 'todosScanned':
+      console.log('Setting todos in appState:', message.todos)
       appState.todos.value = message.todos
-      appState.message.value = `${message.todos.length} TODO trovati`
-      appState.messageType.value = 'success'
       break
       
     case 'authStatus':
@@ -29,19 +33,17 @@ window.addEventListener('message', event => {
       break
       
     case 'loginSuccess':
-      if (appState.authStatus.value) {
+      if (message.authStatus) {
+        appState.authStatus.value = message.authStatus
+      } else if (appState.authStatus.value) {
         (appState.authStatus.value as AuthStatus)[message.platform as keyof AuthStatus] = true
       }
-      appState.message.value = `Login ${message.platform} completato`
-      appState.messageType.value = 'success'
       break
       
     case 'logoutSuccess':
       if (appState.authStatus.value) {
         (appState.authStatus.value as AuthStatus)[message.platform as keyof AuthStatus] = false
       }
-      appState.message.value = `Logout ${message.platform} completato`
-      appState.messageType.value = 'success'
       // Reset platform selection if logged out
       if (appState.selectedPlatform.value === message.platform) {
         appState.selectedPlatform.value = ''
@@ -55,26 +57,21 @@ window.addEventListener('message', event => {
       console.log('Received repos:', message.type, message.repos)
       appState.repos.value = message.repos
       console.log('Repos array updated, length:', (appState.repos.value as any[]).length)
-      appState.message.value = `${message.repos.length} repository trovati`
-      appState.messageType.value = 'success'
       break
       
     case 'issuesCreated':
-      appState.message.value = `${message.count} issue create con successo su ${message.platform}`
-      appState.messageType.value = 'success';
       // Deselect created todos
       (appState.todos.value as TodoItem[]).forEach((todo: any) => todo.selected = false)
       break
       
     case 'error':
-      appState.message.value = message.message
-      appState.messageType.value = 'error'
+      console.error('Error received in main.ts:', message.message)
       break
   }
 })
 
-// Initialize
-appState.vscode.postMessage({ type: 'getAuthStatus' })
+// Initialize auth status on startup
+appState.vscode.postMessage({ type: 'getInitialAuthStatus' })
 
 app.use(router)
 app.mount('#app')

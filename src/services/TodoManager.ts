@@ -2,11 +2,13 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { TodoItem } from '../webview/types/TodoItem';
+import { TodoType } from '../webview/types/TodoType';
 
 export class TodoManager {
   private todos: TodoItem[] = [];
 
   async scanWorkspaceForTodos(): Promise<TodoItem[]> {
+    // Reset completo della cache
     this.todos = [];
     
     if (!vscode.workspace.workspaceFolders) {
@@ -17,6 +19,7 @@ export class TodoManager {
       await this.scanFolder(folder.uri.fsPath);
     }
 
+    console.log('TodoManager - scansione completata, todos trovati:', this.todos.length);
     return this.todos;
   }
 
@@ -54,13 +57,14 @@ export class TodoManager {
         const trimmedLine = line.trim();
         if (this.containsTodo(trimmedLine)) {
           const todoContent = this.extractTodoContent(trimmedLine);
+          const todoType = this.determineTodoType(trimmedLine);
           const description = this.extractTodoDescription(lines, index);
           this.todos.push({
             id: `${filePath}-${index + 1}`,
             file: filePath,
             line: index + 1,
             content: todoContent,
-            fullLine: trimmedLine,
+            type: todoType,
             description: description,
             selected: false
           });
@@ -90,6 +94,14 @@ export class TodoManager {
     // Extract the TODO content after the TODO keyword
     const todoMatch = line.match(/(?:TODO|FIXME)[:\s]*(.*)$/i);
     return todoMatch ? todoMatch[1].trim() : line;
+  }
+
+  private determineTodoType(line: string): TodoType {
+    if (/FIXME/i.test(line)) {
+      return TodoType.FIXME;
+    }
+    // In futuro possiamo aggiungere altri tipi come BUG
+    return TodoType.TODO;
   }
 
   private extractTodoDescription(lines: string[], todoLineIndex: number): string {
@@ -158,32 +170,18 @@ export class TodoManager {
   }
 
   getTodos(): TodoItem[] {
-    return this.todos;
-  }
-
-  getSelectedTodos(): TodoItem[] {
-    return this.todos.filter(todo => todo.selected);
-  }
-
-  toggleTodoSelection(todoId: string): void {
-    const todo = this.todos.find(t => t.id === todoId);
-    if (todo) {
-      todo.selected = !todo.selected;
-    }
-  }
-
-  selectAllTodos(): void {
-    this.todos.forEach(todo => todo.selected = true);
-  }
-
-  deselectAllTodos(): void {
-    this.todos.forEach(todo => todo.selected = false);
-  }
-
-  updateTodoDescription(todoId: string, newDescription: string): void {
-    const todo = this.todos.find(t => t.id === todoId);
-    if (todo) {
-      todo.description = newDescription;
-    }
+    // Migrazione per vecchi TODO senza il campo type
+    return this.todos.map(todo => {
+      if (!todo.type) {
+        // Determina il tipo basandosi sul contenuto se manca
+        const hasFixme = todo.content?.toLowerCase().includes('fixme') || 
+                        todo.description?.toLowerCase().includes('fixme');
+        return {
+          ...todo,
+          type: hasFixme ? TodoType.FIXME : TodoType.TODO
+        };
+      }
+      return todo;
+    });
   }
 }
