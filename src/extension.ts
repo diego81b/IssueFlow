@@ -11,6 +11,13 @@ export function activate(context: vscode.ExtensionContext) {
   const githubService = new GitHubService(context);
   const gitlabService = new GitLabService(context);
   
+  // Create status bar item
+  const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+  statusBarItem.text = "$(checklist) IssueFlow";
+  statusBarItem.tooltip = "Open IssueFlow - Transform TODOs into Issues";
+  statusBarItem.command = 'issueflow.openTodoManager';
+  statusBarItem.show();
+  
   // Register command to open TODO manager
   const openTodoManager = vscode.commands.registerCommand('issueflow.openTodoManager', () => {
     console.log('IssueFlow command executed!');
@@ -32,7 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
     TodoWebviewProvider.createOrShow(context.extensionUri, todoManager, githubService, gitlabService);
   });
 
-  context.subscriptions.push(openTodoManager, reconfigureGitLab, legacyCommand);
+  context.subscriptions.push(statusBarItem, openTodoManager, reconfigureGitLab, legacyCommand);
 }
 
 export function deactivate() {}

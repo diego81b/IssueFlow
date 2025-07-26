@@ -61,42 +61,15 @@
     <main class="p-6">
       <router-view />
     </main>
-
-    <!-- Global Message -->
-    <div
-      v-if="message"
-      :class="messageClass"
-      class="fixed bottom-4 right-4 max-w-md z-50"
-    >
-      <div class="flex items-center justify-between">
-        <span>{{ message }}</span>
-        <button @click="clearMessage" class="ml-3 text-current hover:opacity-75">
-          ✕
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { inject, computed } from 'vue'
+import { inject } from 'vue'
 import { useRoute } from 'vue-router'
 import type { AppState } from '../composables/useAppState'
 
 const route = useRoute()
 const appState = inject<AppState>('appState')!
-const { authStatus, message, messageType } = appState
-
-const messageClass = computed(() => {
-  const baseClass = 'border rounded-lg p-4 shadow-lg'
-  switch (messageType.value) {
-    case 'success': return `${baseClass} bg-green-50 border-green-200 text-green-800`
-    case 'error': return `${baseClass} bg-red-50 border-red-200 text-red-800`
-    default: return `${baseClass} bg-blue-50 border-blue-200 text-blue-800`
-  }
-})
-
-const clearMessage = () => {
-  message.value = ''
-}
+const { authStatus } = appState
 </script>

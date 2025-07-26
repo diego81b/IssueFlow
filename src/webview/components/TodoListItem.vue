@@ -17,7 +17,7 @@
         </div>
 
         <!-- Sezione descrizione (solo se selezionato o se ha già una descrizione) -->
-        <div v-show="todo.selected || todo.description" class="mb-2">
+        <div class="mb-2">
           <label class="block text-xs font-medium text-gray-700 mb-1">Descrizione dettagliata:</label>
           <textarea 
             :value="todo.description"
