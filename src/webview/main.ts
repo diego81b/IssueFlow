@@ -38,6 +38,8 @@ window.addEventListener('message', event => {
       } else if (appState.authStatus.value) {
         (appState.authStatus.value as AuthStatus)[message.platform as keyof AuthStatus] = true
       }
+      // Forza il refresh dello stato dopo loginSuccess di GitHub o GitLab
+      appState.vscode.postMessage({ type: 'getInitialAuthStatus' });
       break
       
     case 'logoutSuccess':
@@ -50,6 +52,7 @@ window.addEventListener('message', event => {
         appState.selectedRepo.value = null
         appState.repos.value = []
       }
+      appState.loading.value = false;
       break
       
     case 'githubRepos':

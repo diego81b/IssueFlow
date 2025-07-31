@@ -1,38 +1,46 @@
 <template>
-  <div class="border rounded p-4 hover:bg-gray-50 transition-colors">
-    <div class="flex items-center space-x-3">
-      <input 
-        type="checkbox" 
-        :checked="todo.selected" 
-        @change="$emit('toggle', todo.id)" 
-        class="w-4 h-4"
-      />
-      <div class="flex-1 min-w-0">
-        <!-- contenuto del TODO a sinistra, badge a destra -->
-        <div class="flex items-center justify-between mb-2 min-w-0">
-          <p class="uppercase font-bold text-gray-800 flex-1 mr-3 truncate">{{ todo.content }}</p>
-          <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded flex-shrink-0">
-            {{ TODO_TYPE_LABELS[todo.type] }}
-          </span>
-        </div>
+  <div class="card bg-base-100 shadow-sm hover:shadow-md transition-shadow">
+    <div class="card-body p-4">
+      <div class="flex items-center space-x-3">
+        <input 
+          type="checkbox" 
+          :checked="todo.selected" 
+          @change="$emit('toggle', todo.id)" 
+          class="checkbox checkbox-primary"
+        />
+        <div class="flex-1 min-w-0">
+          <!-- contenuto del TODO a sinistra, badge a destra -->
+          <div class="flex items-center justify-between mb-2 min-w-0">
+            <div class="flex items-center space-x-2 flex-1 mr-3">
+              <component :is="getTypeIcon(todo.type)" class="h-4 w-4 flex-shrink-0" :class="getTypeIconColor(todo.type)" />
+              <p class="uppercase font-bold text-base-content truncate">{{ todo.content }}</p>
+            </div>
+            <div class="badge badge-primary badge-sm flex-shrink-0">
+              {{ TODO_TYPE_LABELS[todo.type] }}
+            </div>
+          </div>
 
-        <!-- Sezione descrizione (solo se selezionato o se ha già una descrizione) -->
-        <div class="mb-2">
-          <label class="block text-xs font-medium text-gray-700 mb-1">Descrizione dettagliata:</label>
-          <textarea 
-            :value="todo.description"
-            :disabled="!todo.selected"
-            @input="$emit('updateDescription', todo.id, ($event.target as HTMLTextAreaElement)?.value || '')"
-            class="w-full text-sm text-gray-700 bg-blue-50 p-2 rounded border-l-4 border-blue-200 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
-            rows="3"
-            :placeholder="todo.description || 'Aggiungi una descrizione dettagliata per questo TODO...'"
-          ></textarea>
-        </div>
+          <!-- Sezione descrizione (solo se selezionato o se ha già una descrizione) -->
+          <div class="mb-2">
+            <label class="label">
+              <span class="label-text text-xs font-medium">Descrizione dettagliata:</span>
+            </label>
+            <textarea 
+              :value="todo.description"
+              :disabled="!todo.selected"
+              @input="$emit('updateDescription', todo.id, ($event.target as HTMLTextAreaElement)?.value || '')"
+              class="textarea textarea-bordered w-full text-sm resize-none focus:textarea-primary disabled:bg-base-200 disabled:text-base-content/50"
+              rows="3"
+              :placeholder="todo.description || 'Aggiungi una descrizione dettagliata per questo TODO...'"
+            ></textarea>
+          </div>
 
-        <!-- nome file e linea -->
-        <p class="text-xs text-gray-500 mb-2">
-          {{ getFileName(todo.file) }}:{{ todo.line }}
-        </p>
+          <!-- nome file e linea -->
+          <div class="flex items-center space-x-2 text-xs text-base-content/60">
+            <DocumentTextIcon class="h-3 w-3" />
+            <span>{{ getFileName(todo.file) }}:{{ todo.line }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -40,7 +48,13 @@
 
 <script setup lang="ts">
 import type { TodoItem } from '../types/TodoItem'
-import { TODO_TYPE_LABELS } from '../types/TodoType'
+import { TODO_TYPE_LABELS, TodoType } from '../types/TodoType'
+import { 
+  ExclamationTriangleIcon, 
+  InformationCircleIcon, 
+  BugAntIcon,
+  DocumentTextIcon 
+} from '@heroicons/vue/24/outline'
 
 defineProps<{
   todo: TodoItem
@@ -48,6 +62,32 @@ defineProps<{
 
 const getFileName = (filePath: string) => {
   return filePath.split('/').pop() || filePath.split('\\').pop() || filePath
+}
+
+const getTypeIcon = (type: TodoType) => {
+  switch (type) {
+    case TodoType.TODO:
+      return InformationCircleIcon
+    case TodoType.FIXME:
+      return ExclamationTriangleIcon
+    case TodoType.BUG:
+      return BugAntIcon
+    default:
+      return InformationCircleIcon
+  }
+}
+
+const getTypeIconColor = (type: TodoType) => {
+  switch (type) {
+    case TodoType.TODO:
+      return 'text-info'
+    case TodoType.FIXME:
+      return 'text-warning'
+    case TodoType.BUG:
+      return 'text-error'
+    default:
+      return 'text-info'
+  }
 }
 
 defineEmits<{

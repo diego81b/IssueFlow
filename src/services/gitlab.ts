@@ -43,24 +43,30 @@ export class GitLabService {
 
   private async ensureGitLabUrl(): Promise<void> {
     const existingUrl = this.getGitLabUrl();
-    if (existingUrl && existingUrl !== 'https://gitlab.com') {
-      // URL already configured and it's not the default, keep it
-      return;
-    }
-
-    const urlChoice = await vscode.window.showQuickPick([
+    let urlOptions = [
       {
         label: 'GitLab.com (https://gitlab.com)',
         description: 'Usa GitLab.com ufficiale',
         url: 'https://gitlab.com'
-      },
-      {
-        label: 'GitLab personalizzato',
-        description: 'Inserisci URL di una installazione GitLab personalizzata',
-        url: 'custom'
       }
-    ], {
-      placeHolder: 'Seleziona il tipo di GitLab da utilizzare',
+    ];
+    if (existingUrl && existingUrl !== 'https://gitlab.com') {
+      urlOptions.push({
+        label: `Usa URL attuale (${existingUrl})`,
+        description: 'Conferma o modifica l\'URL attualmente configurato',
+        url: existingUrl
+      });
+    }
+    urlOptions.push({
+      label: existingUrl && existingUrl !== 'https://gitlab.com'
+        ? `GitLab personalizzato (attuale: ${existingUrl})`
+        : 'GitLab personalizzato',
+      description: 'Inserisci URL di una installazione GitLab personalizzata',
+      url: 'custom'
+    });
+
+    const urlChoice = await vscode.window.showQuickPick(urlOptions, {
+      placeHolder: 'Seleziona o conferma l\'URL di GitLab da utilizzare',
       ignoreFocusOut: true
     });
 
@@ -70,10 +76,10 @@ export class GitLabService {
 
     let finalUrl = urlChoice.url;
 
-    if (urlChoice.url === 'custom') {
+    if (urlChoice.url === 'custom' || (existingUrl && urlChoice.url === existingUrl)) {
       const customUrl = await vscode.window.showInputBox({
-        prompt: 'Inserisci l\'URL della tua installazione GitLab (es. https://gitlab.azienda.com)',
-        placeHolder: 'https://gitlab.azienda.com',
+        prompt: `Inserisci l'URL della tua installazione GitLab (attuale: ${existingUrl || 'https://gitlab.com'})`,
+        placeHolder: existingUrl || 'https://gitlab.azienda.com',
         ignoreFocusOut: true,
         validateInput: (value) => {
           if (!value) return 'URL obbligatorio';

@@ -4,9 +4,9 @@ import type { TodoItem } from '../webview/types/TodoItem';
 import { GitHubService } from '../services/github';
 import { GitLabService } from '../services/gitlab';
 
-export class TodoWebviewProvider implements vscode.WebviewViewProvider {
+export class TodoWebviewProvider {
+	// <- Rimuovi "implements vscode.WebviewViewProvider"
 	public static readonly viewType = 'issueflow.todoView';
-	private _view?: vscode.WebviewView;
 	private static _currentPanel?: vscode.WebviewPanel;
 
 	constructor(
@@ -43,6 +43,7 @@ export class TodoWebviewProvider implements vscode.WebviewViewProvider {
 				localResourceRoots: [
 					vscode.Uri.joinPath(extensionUri, 'dist'),
 					vscode.Uri.joinPath(extensionUri, 'src', 'webview'),
+					vscode.Uri.joinPath(extensionUri, 'src', 'webview', 'assets'),
 				],
 			},
 		);
@@ -72,39 +73,11 @@ export class TodoWebviewProvider implements vscode.WebviewViewProvider {
 		);
 	}
 
-	public static disposeCurrent() {
-		if (TodoWebviewProvider._currentPanel) {
-			TodoWebviewProvider._currentPanel.dispose();
-			TodoWebviewProvider._currentPanel = undefined;
-		}
-	}
-
-	public resolveWebviewView(
-		webviewView: vscode.WebviewView,
-		_context: vscode.WebviewViewResolveContext,
-		_token: vscode.CancellationToken,
-	) {
-		this._view = webviewView;
-
-		webviewView.webview.options = {
-			enableScripts: true,
-			localResourceRoots: [this._extensionUri],
-		};
-
-		this._update(webviewView.webview);
-
-		webviewView.webview.onDidReceiveMessage((data) => {
-			this._handleMessage(data);
-		});
-	}
-
 	private _update(webview: vscode.Webview) {
 		webview.html = this._getHtmlForWebview(webview);
 	}
 
 	private _getHtmlForWebview(webview: vscode.Webview) {
-		// Always use built files to avoid CORS issues
-		// In development, Vite will rebuild on changes
 		const fs = require('fs');
 		const path = require('path');
 
@@ -115,7 +88,6 @@ export class TodoWebviewProvider implements vscode.WebviewViewProvider {
 		try {
 			html = fs.readFileSync(htmlPath, 'utf8');
 		} catch (error) {
-			// Fallback if dist doesn't exist yet
 			return `
         <!DOCTYPE html>
         <html>
@@ -134,26 +106,27 @@ export class TodoWebviewProvider implements vscode.WebviewViewProvider {
       `;
 		}
 
-		// Replace paths with webview URIs
-		const distUri = webview.asWebviewUri(vscode.Uri.file(distPath));
+    // Replace paths with webview URIs
+    const distUri = webview.asWebviewUri(vscode.Uri.file(distPath));
 
-		// Replace relative paths with webview URIs
-		html = html.replace(/href="\/assets\//g, `href="${distUri}/assets/`);
-		html = html.replace(/src="\/assets\//g, `src="${distUri}/assets/`);
-		html = html.replace(/href="\/vite\.svg"/g, `href="${distUri}/vite.svg"`);
+    // Solo assets e file specifici - rimuoviamo le regex generiche
+    html = html.replace(/href="\/assets\//g, `href="${distUri}/assets/`);
+    html = html.replace(/src="\/assets\//g, `src="${distUri}/assets/`);
+    html = html.replace(/href="\/vite\.svg"/g, `href="${distUri}/vite.svg"`);
+    html = html.replace(/src="\/vite\.svg"/g, `src="${distUri}/vite.svg"`);
 
-		// Add CSP meta tag
-		const nonce = getNonce();
-		html = html.replace(
-			'<meta name="viewport" content="width=device-width, initial-scale=1.0" />',
-			`<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' ${webview.cspSource}; img-src ${webview.cspSource} https:;">`,
-		);
+    // Add CSP meta tag con più permessi per le immagini
+    const nonce = getNonce();
+    html = html.replace(
+        '<meta name="viewport" content="width=device-width, initial-scale=1.0" />',
+        `<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' ${webview.cspSource}; img-src ${webview.cspSource} https: data: blob: 'unsafe-inline';">`,
+    );
 
-		// Add nonce to script tags
-		html = html.replace(/(<script[^>]*)(>)/g, `$1 nonce="${nonce}"$2`);
+    // Add nonce to script tags
+    html = html.replace(/(<script[^>]*)(>)/g, `$1 nonce="${nonce}"$2`);
 
-		return html;
+    return html;
 	}
 
 	private async _handleMessage(message: any) {
@@ -162,7 +135,7 @@ export class TodoWebviewProvider implements vscode.WebviewViewProvider {
 				try {
 					// Reset appState prima della scansione
 					this._postMessage({ type: 'resetAppState' });
-					
+
 					const todos = await this._todoManager.scanWorkspaceForTodos();
 					this._postMessage({ type: 'todosScanned', todos });
 				} catch (error) {
@@ -180,13 +153,13 @@ export class TodoWebviewProvider implements vscode.WebviewViewProvider {
 				try {
 					await this._githubService.ensureLogin();
 					console.log('GitHub login successful');
-					this._postMessage({ 
-						type: 'loginSuccess', 
+					this._postMessage({
+						type: 'loginSuccess',
 						platform: 'github',
 						authStatus: {
 							github: this._githubService.isLoggedIn(),
-							gitlab: this._gitlabService.isLoggedIn()
-						}
+							gitlab: this._gitlabService.isLoggedIn(),
+						},
 					});
 				} catch (error) {
 					console.error('GitHub login failed:', error);
@@ -202,13 +175,13 @@ export class TodoWebviewProvider implements vscode.WebviewViewProvider {
 				try {
 					await this._gitlabService.ensureLogin();
 					console.log('GitLab login successful');
-					this._postMessage({ 
-						type: 'loginSuccess', 
+					this._postMessage({
+						type: 'loginSuccess',
 						platform: 'gitlab',
 						authStatus: {
 							github: this._githubService.isLoggedIn(),
-							gitlab: this._gitlabService.isLoggedIn()
-						}
+							gitlab: this._gitlabService.isLoggedIn(),
+						},
 					});
 				} catch (error) {
 					console.error('GitLab login failed:', error);
@@ -358,9 +331,7 @@ export class TodoWebviewProvider implements vscode.WebviewViewProvider {
 	}
 
 	private _postMessage(message: any) {
-		if (this._view && this._view.webview && this._view.webview.postMessage) {
-			this._view.webview.postMessage(message);
-		} else if (TodoWebviewProvider._currentPanel) {
+		if (TodoWebviewProvider._currentPanel) {
 			TodoWebviewProvider._currentPanel.webview.postMessage(message);
 		}
 	}
