@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen">
+  <div class="h-screen flex flex-col">
     <Header />
     <!-- Main Content -->
-    <main class="p-6 bg-base-100">
+    <main class="flex-1 overflow-hidden p-2">
       <router-view />
     </main>
   </div>

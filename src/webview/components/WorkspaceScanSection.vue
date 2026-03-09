@@ -1,35 +1,50 @@
 <template>
-  <div class="bg-white rounded-lg shadow-md p-4 flex-shrink-0">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div class="flex-1">
-        <h2 class="text-xl font-bold text-gray-800 mb-2">Scansione Workspace</h2>
-        <p class="text-sm text-gray-600">
-          Trova tutti i commenti TODO e FIXME nel tuo workspace per convertirli in issue.
-        </p>
-      </div>
-      <div class="flex-shrink-0">
-        <button 
-          @click="$emit('scan')"
-          :disabled="loading"
-          class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
-        >
-          <svg v-if="loading" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-          </svg>
-          <span>{{ loading ? 'Scansione...' : 'Scansiona Workspace' }}</span>
-        </button>
-      </div>
+  <div class="bg-neutral-800 rounded-lg shadow-md p-4 flex-shrink-0">
+    <div class="flex items-center gap-2">
+      <input
+        ref="inputRef"
+        v-model="filter"
+        @keyup.enter="emitScan"
+        type="text"
+        placeholder="Filtra per testo TODO..."
+        class="input input-md w-full h-10"
+        aria-label="Filtro TODO"
+      />
+      <button @click="emitScan" :disabled="loading" class="btn btn-md btn-soft btn-primary h-10">
+        <span>{{ loading ? 'Searching...' : 'Search' }}</span>
+      </button>
+      <button v-if="filter" @click="clearFilter" class="btn btn-md btn-ghost h-10">
+        Annulla filtro
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  loading: boolean
+import { ref, onMounted } from 'vue'
+
+defineProps<{ loading: boolean }>()
+const emit = defineEmits<{
+  (e: 'scan', filter?: string): void
 }>()
 
-defineEmits<{
-  scan: []
-}>()
+const filter = ref('')
+const inputRef = ref<HTMLInputElement | null>(null)
+
+function emitScan() {
+  const value = filter.value && filter.value.trim().length > 0 ? filter.value.trim() : undefined
+  emit('scan', value)
+}
+
+function clearFilter() {
+  filter.value = ''
+  emit('scan', undefined)
+  // focus the input for convenience
+  inputRef.value?.focus()
+}
+
+onMounted(() => {
+  // optional: autofocus the input when mounted
+  // inputRef.value?.focus()
+})
 </script>

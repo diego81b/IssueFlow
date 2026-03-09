@@ -19,8 +19,9 @@ export class TodoManager {
       await this.scanFolder(folder.uri.fsPath);
     }
 
-    console.log('TodoManager - scansione completata, todos trovati:', this.todos.length);
-    return this.todos;
+  console.log('TodoManager - scansione completata, todos trovati:', this.todos.length);
+  // Use getTodos() to apply migration/defaults (e.g., derive missing types)
+  return this.getTodos();
   }
 
   private async scanFolder(folderPath: string): Promise<void> {
@@ -54,7 +55,7 @@ export class TodoManager {
       const lines = content.split(/\r?\n/);
       
       lines.forEach((line, index) => {
-        const trimmedLine = line.trim();
+        const trimmedLine = (line ?? '').trim();
         if (this.containsTodo(trimmedLine)) {
           const todoContent = this.extractTodoContent(trimmedLine);
           const todoType = this.determineTodoType(trimmedLine);
@@ -84,7 +85,12 @@ export class TodoManager {
       /\/\/\s*FIXME/i,
       /\/\*\s*FIXME/i,
       /#\s*FIXME/i,
-      /<!--\s*FIXME/i
+      /<!--\s*FIXME/i,
+      /\/\/\s*BUG/i,
+      /\/\*\s*BUG/i,
+      /#\s*BUG/i,
+      /<!--\s*BUG/i
+      ,/^\s*\*\s*(?:TODO|FIXME|BUG)/i
     ];
     
     return todoPatterns.some(pattern => pattern.test(line));
@@ -92,13 +98,18 @@ export class TodoManager {
 
   private extractTodoContent(line: string): string {
     // Extract the TODO content after the TODO keyword
-    const todoMatch = line.match(/(?:TODO|FIXME)[:\s]*(.*)$/i);
-    return todoMatch ? todoMatch[1].trim() : line;
+    const todoMatch = line.match(/(?:TODO|FIXME|BUG)[:\s]*(.*)$/i);
+    const raw = todoMatch?.[1] ?? '';
+    const trimmed = raw.trim();
+    return trimmed || line;
   }
 
   private determineTodoType(line: string): TodoType {
     if (/FIXME/i.test(line)) {
       return TodoType.FIXME;
+    }
+    if (/BUG/i.test(line)) {
+      return TodoType.BUG;
     }
     // In futuro possiamo aggiungere altri tipi come BUG
     return TodoType.TODO;
@@ -110,7 +121,9 @@ export class TodoManager {
     
     // Check the next few lines for continuation of the TODO comment
     for (let i = todoLineIndex + 1; i < Math.min(todoLineIndex + 4, lines.length); i++) {
-      const nextLine = lines[i].trim();
+      const nextRaw = lines[i];
+      if (typeof nextRaw !== 'string') break;
+      const nextLine = nextRaw.trim();
       
       // If it's an empty line, stop looking
       if (!nextLine) break;
@@ -130,7 +143,9 @@ export class TodoManager {
     // Look for context in the previous lines as well (but less priority)
     const previousContextLines: string[] = [];
     for (let i = todoLineIndex - 1; i >= Math.max(todoLineIndex - 2, 0); i--) {
-      const prevLine = lines[i].trim();
+      const prevRaw = lines[i];
+      if (typeof prevRaw !== 'string') break;
+      const prevLine = prevRaw.trim();
       
       // If it's an empty line, stop looking
       if (!prevLine) break;
@@ -163,7 +178,7 @@ export class TodoManager {
 
   private extractCommentContent(line: string): string {
     // Remove comment markers and extract content
-    return line
+    return (line ?? '')
       .replace(/^\s*(?:\/\/|\/\*|\*|#|<!--|-->)\s*/, '')
       .replace(/\*\/\s*$/, '')
       .trim();
@@ -173,12 +188,14 @@ export class TodoManager {
     // Migrazione per vecchi TODO senza il campo type
     return this.todos.map(todo => {
       if (!todo.type) {
-        // Determina il tipo basandosi sul contenuto se manca
-        const hasFixme = todo.content?.toLowerCase().includes('fixme') || 
-                        todo.description?.toLowerCase().includes('fixme');
+        // Use safe defaults to avoid calling methods on undefined
+        const contentLower = (todo.content ?? '').toLowerCase();
+        const descriptionLower = (todo.description ?? '').toLowerCase();
+        const hasFixme = contentLower.includes('fixme') || descriptionLower.includes('fixme');
+        const hasBug = contentLower.includes('bug') || descriptionLower.includes('bug');
         return {
           ...todo,
-          type: hasFixme ? TodoType.FIXME : TodoType.TODO
+          type: hasBug ? TodoType.BUG : hasFixme ? TodoType.FIXME : TodoType.TODO
         };
       }
       return todo;

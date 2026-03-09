@@ -2,3 +2,20 @@
 @plugin "daisyui" {
   themes: nord --default, dracula --prefersdark;
 }
+
+/* Ensure the webview document occupies the full viewport and prevent host/page-level scrolling.
+   This makes the Vue app in #app control internal scrolling via overflow-y-auto on components. */
+html, body, #app {
+  height: 100%;
+}
+
+/* Prevent the outer body from scrolling so only inner app areas with overflow can scroll. */
+body {
+  overflow: hidden;
+}
+
+/* Optional: make router-view and main occupy full height to allow flex-based children to size correctly */
+.vscode-webview-ui-root, #app, body > #app {
+  min-height: 100%;
+  height: 100%;
+}

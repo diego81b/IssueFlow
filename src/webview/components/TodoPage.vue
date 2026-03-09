@@ -1,40 +1,54 @@
 <template>
-  <div class="h-screen flex flex-col max-w-6xl mx-auto space-y-4 p-4">
-    <!-- Workspace Scan Section -->
-    <WorkspaceScanSection 
-      :loading="loadingScan"
-      @scan="scanTodos"
-    />
-    
-    <!-- TODO List Section -->
-    <TodoListSection
-      v-if="appState?.todos?.value && appState.todos.value.length > 0"
-      :todos="appState.todos.value"
-      :selectedCount="selectedTodos.length"
-      @selectAll="selectAllTodos"
-      @deselectAll="deselectAllTodos"
-      @toggle="toggleTodo"
-      @updateDescription="updateTodoDescription"
-    />
+  <div class="flex-1 flex flex-col mx-auto space-y-4 p-4 overflow-hidden h-full">
+    <!-- Two-column responsive layout: left = scan + todos, right = create issue -->
+    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden">
 
-    <!-- No TODOs Found -->
-    <NoTodosFoundSection
-      v-if="!appState?.todos?.value || appState.todos.value.length === 0"
-    />
+      <!-- LEFT COLUMN: Scan + TODO list -->
+      <div class="flex flex-col overflow-hidden">
+        <!-- Workspace Scan Section -->
+        <WorkspaceScanSection 
+          :loading="loadingScan"
+          @scan="scanTodos"
+        />
 
-    <!-- Issue Creation Section -->
-    <IssueCreationSection
-      v-if="selectedTodos.length > 0"
-      :selectedTodos="selectedTodos"
-      :selectedPlatform="appState?.selectedPlatform?.value ?? ''"
-      :selectedRepo="appState?.selectedRepo?.value ?? null"
-      :repos="appState?.repos?.value ?? []"
-      :authStatus="appState?.authStatus?.value ?? null"
-      :loading="loadingCreate"
-      @platformChange="handlePlatformChange"
-      @repoChange="handleRepoChange"
-      @createIssues="createIssues"
-    />
+        <!-- TODO List or No Results -->
+        <div class="flex-1 flex flex-col overflow-hidden mt-4">
+          <TodoListSection
+            v-if="appState?.todos?.value && appState.todos.value.length > 0"
+            :todos="appState.todos.value"
+            :selectedCount="selectedTodos.length"
+            :filter="activeFilter"
+            @selectAll="selectAllTodos"
+            @deselectAll="deselectAllTodos"
+            @toggle="toggleTodo"
+            @updateDescription="updateTodoDescription"
+          />
+
+          <NoTodosFoundSection
+            v-else
+          />
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Issue creation panel (always present, button disabled if no selection) -->
+      <div class="flex flex-col overflow-hidden">
+        <div class="h-full">
+          <IssueCreationSection
+            :selectedTodos="selectedTodos"
+            :selectedPlatform="appState?.selectedPlatform?.value ?? ''"
+            :selectedRepo="appState?.selectedRepo?.value ?? null"
+            :repos="appState?.repos?.value ?? []"
+            :authStatus="appState?.authStatus?.value ?? null"
+            :loading="loadingCreate"
+            :reposLoading="reposLoading"
+            @platformChange="handlePlatformChange"
+            @repoChange="handleRepoChange"
+            @createIssues="createIssues"
+          />
+        </div>
+      </div>
+
+    </div>
 
     <!-- Local Message -->
     <LocalMessage
@@ -62,8 +76,10 @@ const appState = inject<AppState>('appState')
 // Local state
 const loadingScan = ref(false)
 const loadingCreate = ref(false)
+const reposLoading = ref(false)
 const localMessage = ref<string | null>(null)
 const localMessageType = ref<'success' | 'info' | 'error'>('info')
+const activeFilter = ref<string | null>(null)
 
 // Computed properties
 const selectedTodos = computed(() => {
@@ -71,10 +87,13 @@ const selectedTodos = computed(() => {
 })
 
 // Functions
-const scanTodos = () => {
+const scanTodos = (filter?: string) => {
   if (loadingScan.value) return;
   loadingScan.value = true;
-  appState?.vscode.postMessage({ type: 'scanTodos' })
+  activeFilter.value = filter && filter.trim().length > 0 ? filter.trim() : null
+  const payload: any = { type: 'scanTodos' }
+  if (activeFilter.value) payload.filter = activeFilter.value
+  appState?.vscode.postMessage(payload)
 }
 
 const selectAllTodos = () => {
@@ -113,11 +132,13 @@ const updateTodoDescription = (todoId: string, description: string) => {
 
 const loadRepos = () => {
   if (!appState?.vscode || !appState?.selectedPlatform?.value) return;
-  
-  appState.vscode.postMessage({ 
-    type: 'loadRepos', 
-    platform: appState.selectedPlatform.value 
-  })
+  const platform = appState.selectedPlatform.value;
+  reposLoading.value = true
+  if (platform === 'github') {
+    appState.vscode.postMessage({ type: 'getGithubRepos' })
+  } else if (platform === 'gitlab') {
+    appState.vscode.postMessage({ type: 'getGitlabRepos' })
+  }
 }
 
 const handlePlatformChange = (platform: string) => {
@@ -167,20 +188,30 @@ window.addEventListener('message', (event) => {
   
   switch (message.type) {
     case 'resetAppState':
-      localMessage.value = 'Scansione in corso...'
-      localMessageType.value = 'info'
-      setTimeout(() => {
-        localMessage.value = null
-      }, 2000)
+      console.log('🔍 scansione in corso...')
       break
     case 'todosScanned':
       console.log('🔍 todos received in TodoPage:', message.todos)
-      localMessage.value = `${message.todos.length} TODO trovati`
-      localMessageType.value = 'success'
-      setTimeout(() => {
-        localMessage.value = null
-      }, 3000)
+      // Removed post-scan alert per user request: do not set localMessage here
       break;
+    case 'githubRepos':
+      reposLoading.value = false
+      if (appState?.repos) {
+        const repos = (message.repos || []).slice().sort((a: any, b: any) =>
+          String(a?.name || '').localeCompare(String(b?.name || ''), undefined, { sensitivity: 'base' })
+        )
+        appState.repos.value = repos
+      }
+      break
+    case 'gitlabRepos':
+      reposLoading.value = false
+      if (appState?.repos) {
+        const repos = (message.repos || []).slice().sort((a: any, b: any) =>
+          String(a?.name || '').localeCompare(String(b?.name || ''), undefined, { sensitivity: 'base' })
+        )
+        appState.repos.value = repos
+      }
+      break
     case 'scanTodosDone':
       console.log('✅ Setting loadingScan to false')
       loadingScan.value = false

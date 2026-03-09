@@ -1,19 +1,21 @@
 <template>
-  <div class="max-w-4xl mx-auto">
-    <div class="text-neutral-content p-6">
-      <h2 class="text-xl font-bold mb-6 text-center">Autenticazione</h2>
-      <p class="mb-8 text-center">
-        Configura l'accesso a GitHub e GitLab per creare automaticamente le issue dai tuoi TODO.
-      </p>
+  <div class="w-full flex justify-center">
+    <div class="max-w-4xl mx-auto w-full py-2">
+      <div class="text-neutral-content p-2">
+        <h2 class="text-xl font-bold mb-6 text-center">Autenticazione</h2>
+        <p class="mb-8 text-center">
+          Configura l'accesso a GitHub e GitLab per creare automaticamente le issue dai tuoi TODO.
+        </p>
 
-      <div class="grid md:grid-cols-2 gap-6">
-        <AuthGitHub :authStatus="authStatus ? { github: !!authStatus.github } : { github: false }"
-          :loading="loadingGitHub" :loginGitHub="loginGitHub" :logoutGitHub="logoutGitHub" />
-        <AuthGitLab :authStatus="authStatus ? { gitlab: !!authStatus.gitlab } : { gitlab: false }"
-          :loading="loadingGitLab" :gitlabUrl="gitlabUrl ?? ''" :loginGitLab="loginGitLab" :logoutGitLab="logoutGitLab"
-          :reconfigureGitLab="reconfigureGitLab" />
+        <div class="grid md:grid-cols-2 gap-6">
+          <AuthGitHub :authStatus="authStatus ? { github: !!authStatus.github } : { github: false }"
+            :loading="loadingGitHub" :loginGitHub="loginGitHub" :logoutGitHub="logoutGitHub" />
+          <AuthGitLab :authStatus="authStatus ? { gitlab: !!authStatus.gitlab } : { gitlab: false }"
+            :loading="loadingGitLab" :gitlabUrl="gitlabUrl ?? ''" :loginGitLab="loginGitLab" :logoutGitLab="logoutGitLab"
+            :reconfigureGitLab="reconfigureGitLab" />
+        </div>
+        <LocalMessage v-if="localMessage" :message="localMessage" :type="localMessageType" :duration="4000" />
       </div>
-      <LocalMessage v-if="localMessage" :message="localMessage" :type="localMessageType" :duration="4000" />
     </div>
   </div>
 </template>
@@ -28,11 +30,9 @@ import type { AppState } from '../composables/useAppState'
 const appState = inject<AppState>('appState')
 const { 
   authStatus, 
-  loading, 
   vscode 
 } = appState ?? {
   authStatus: ref({ github: false, gitlab: false }),
-  loading: ref(false),
   vscode: { postMessage: () => {} }
 }
 

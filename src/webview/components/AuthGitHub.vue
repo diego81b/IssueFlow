@@ -7,7 +7,7 @@
         <div class="mb-4">
           <div class="flex flex-col gap-2 mt-2">
             <button v-if="authStatus?.github" @click="logoutGitHub" class="btn btn-outline btn-error w-full">Disconnetti</button>
-            <button v-else @click="loginGitHub" :disabled="loading" class="btn btn-primary w-full">
+            <button v-else @click="loginGitHub" :disabled="loading" class="btn btn-soft btn-primary w-full">
               {{ loading ? 'Connessione...' : 'Connetti GitHub' }}
             </button>
           </div>
@@ -15,7 +15,7 @@
           <div class="h-12"></div>
         </div>
         <div class="flex-grow flex flex-col justify-start">
-          <div class="p-4 rounded-lg border border-primary bg-base-200">
+          <div class="p-4 rounded-lg border border-primary">
             <h4 class="font-bold text-primary mb-3">Istruzioni per configurare GitHub</h4>
             <div class="flex flex-col gap-2 text-sm">
               <div><span class="font-bold">1.</span> Vai su <span class="underline">GitHub.com → Settings → Developer settings</span></div>
@@ -31,8 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
-const props = defineProps<{
+defineProps<{
   authStatus: { github: boolean }
   loading: boolean
   loginGitHub: () => void

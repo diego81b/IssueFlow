@@ -136,8 +136,18 @@ export class TodoWebviewProvider {
 					// Reset appState prima della scansione
 					this._postMessage({ type: 'resetAppState' });
 
-					const todos = await this._todoManager.scanWorkspaceForTodos();
-					this._postMessage({ type: 'todosScanned', todos });
+							const todos = await this._todoManager.scanWorkspaceForTodos();
+							// If the webview provided a filter, apply a simple case-insensitive match
+							let filtered = todos
+							if (message?.filter && typeof message.filter === 'string' && message.filter.trim().length > 0) {
+								const q = message.filter.trim().toLowerCase()
+								filtered = todos.filter(t => {
+									const content = String(t.content || '').toLowerCase()
+									const desc = String(t.description || '').toLowerCase()
+									return content.includes(q) || desc.includes(q)
+								})
+							}
+							this._postMessage({ type: 'todosScanned', todos: filtered });
 				} catch (error) {
 					this._postMessage({
 						type: 'error',
